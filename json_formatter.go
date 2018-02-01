@@ -3,6 +3,7 @@ package logrus
 import (
 	"encoding/json"
 	"fmt"
+	"strconv"
 )
 
 type fieldKey string
@@ -32,6 +33,9 @@ type JSONFormatter struct {
 
 	// DisableTimestamp allows disabling automatic timestamps in output
 	DisableTimestamp bool
+
+	// UnixTimestamp allow to format timestamp as unix timestamp format
+	UnixTimestamp bool
 
 	// FieldMap allows users to customize the names of keys for default fields.
 	// As an example:
@@ -65,8 +69,10 @@ func (f *JSONFormatter) Format(entry *Entry) ([]byte, error) {
 		timestampFormat = defaultTimestampFormat
 	}
 
-	if !f.DisableTimestamp {
+	if !f.DisableTimestamp && !f.UnixTimestamp {
 		data[f.FieldMap.resolve(FieldKeyTime)] = entry.Time.Format(timestampFormat)
+	} else if f.UnixTimestamp {
+		data[f.FieldMap.resolve(FieldKeyTime)] = strconv.FormatInt(entry.Time.Unix(), 10)
 	}
 	data[f.FieldMap.resolve(FieldKeyMsg)] = entry.Message
 	data[f.FieldMap.resolve(FieldKeyLevel)] = entry.Level.String()
